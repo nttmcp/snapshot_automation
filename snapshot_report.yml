@@ -5,7 +5,7 @@
     datacenter: "{{mcp}}"
     snapshot_servers: []
     server_snapshots: []
-    report: []
+    failed_report: []
     count_report: []
     server_report: []
     failed_servers: []

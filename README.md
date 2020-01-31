@@ -16,6 +16,10 @@ This collection of Playbooks can be used to enable the snapshot service on serve
 * \>750 servers 6GB of RAM 2 vCPUs
 * Running 2 simultaneous reports against 2 different MCPs: Double the RAM and vCPU count
 
+### Ansible Version
+
+* >2.9
+
 ### Python Modules
 
 * jmespath

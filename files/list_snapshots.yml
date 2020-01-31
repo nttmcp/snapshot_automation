@@ -34,7 +34,7 @@
 # unique entry in this array.
 - name: Generating the list of failed snapshots
   set_fact:
-    report: "{{report + [{'server': item.name, 'server_id': item.id, 'snapshot': item2.id, 'consistency': consistency, 'state': state, 'index': index_state, 'start': start_time, 'replica': replica, 'family': family}]}}"
+    failed_report: "{{failed_report + [{'server': item.name, 'server_id': item.id, 'snapshot': item2.id, 'consistency': consistency, 'state': state, 'index': index_state, 'start': start_time, 'replica': replica, 'family': family}]}}"
   when: state != 'NORMAL' and not snapshots.failed|default(False)
   loop: "{{snapshots.data.snapshot_info}}"
   loop_control:
@@ -58,7 +58,7 @@
 # Generates the array of server stats, one entry per server and is reported in 'reports/<mcp>_server_report.csv'
 - name: Generating the list used for the server report
   set_fact:
-    server_report: "{{server_report + [{'name': item.name, 'id': item.id, 'replication': item.replication, 'count': snapshots.data.snapshot_info|count, 'failed': report | json_query(query1)| count, 'local': snapshots.data.snapshot_info | json_query(query2) | count, 'remote': snapshots.data.snapshot_info | json_query(query3) | count}]}}"
+    server_report: "{{server_report + [{'name': item.name, 'id': item.id, 'replication': item.replication, 'count': snapshots.data.snapshot_info|count, 'failed': failed_report | json_query(query1)| count, 'local': snapshots.data.snapshot_info | json_query(query2) | count, 'remote': snapshots.data.snapshot_info | json_query(query3) | count}]}}"
     snapshot_replica_count: "{{snapshot_replica_count | int + snapshots.data.snapshot_info | json_query(query3) | count}}"
   when: not snapshots.failed|default(False)
   vars:

@@ -1,0 +1,25 @@
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  vars:
+    # Change region, datacenter and cnd to the required values or include them with -e on the CLI
+    region: "{{region}}"
+    csv_file: "{{csv}}"
+    mcp: "{{mcp}}"
+  tasks:
+    # Load the CSV file with the list of servers
+    - name: Read servers from CSV file and return a dictionary
+      read_csv:
+        path: "{{csv_file}}"
+        strict: True
+      register: csv_servers
+
+    - name: Disable Snapshots Completely
+      snapshot_service:
+        region: "{{region}}"
+        datacenter: "{{mcp}}"
+        server_id: "{{item.id}}"
+        state: absent
+      loop: "{{csv_servers.list}}"
+      loop_control:
+        label: "Disabling Snaphots on: {{item.id}}"
