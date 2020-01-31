@@ -6,6 +6,7 @@
     region: "{{region}}"
     csv_file: "{{csv}}"
     mcp: "{{mcp}}"
+    replication_mcp: "{{rep_mcp}}"
   tasks:
     # Load the CSV file with the list of servers
     - name: Read servers from CSV file and return a dictionary
@@ -14,12 +15,8 @@
         strict: True
       register: csv_servers
 
-    - name: Disable Snapshots Completely
-      snapshot_service:
-        region: "{{region}}"
-        datacenter: "{{mcp}}"
-        server_id: "{{item.id}}"
-        state: absent
+    - name: Disable Snapshots
+      include_tasks: ./files/disable_snapshots.yml
       loop: "{{csv_servers.list}}"
       loop_control:
         label: "Disabling Snaphots on: {{item.id}}"

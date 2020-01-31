@@ -1,0 +1,26 @@
+- name: Get the server
+  nttmcp.mcp.server_info:
+    region: "{{region}}"
+    datacenter: "{{mcp}}"
+    id: "{{item.id}}"
+  register: server
+
+- name: Disable Snapshot Replication
+  nttmcp.mcp.snapshot_service:
+    region: "{{region}}"
+    datacenter: "{{mcp}}"
+    server_id: "{{item.id}}"
+    replication: "{{rep_mcp}}"
+    state: absent
+  when: server.data.server[0].snapshotService.replicationTargetDatacenterId is defined and server.data.server[0].snapshotService.state == 'NORMAL'
+  loop: "{{csv_servers.list}}"
+  loop_control:
+    label: "Disabling Snaphot Replication on: {{item.id}}"
+
+- name: Disable Snapshots Completely
+  nttmcp.mcp.snapshot_service:
+    region: "{{region}}"
+    datacenter: "{{mcp}}"
+    server_id: "{{item.id}}"
+    state: absent
+  when: server.data.server[0].snapshotService.replicationTargetDatacenterId is not defined and server.data.server[0].snapshotService.state == 'NORMAL'
