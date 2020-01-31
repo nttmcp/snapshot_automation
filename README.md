@@ -35,6 +35,8 @@ To install these modules execute:
 
 Additionally, the NTTMCP-MCP Ansible collection is required.
 
+https://galaxy.ansible.com/nttmcp/mcp
+
 > ansible-galaxy collection install nttmcp.mcp
 
 

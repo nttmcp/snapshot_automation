@@ -34,7 +34,7 @@
         replication: "{{True if item.snapshotService.replicationTargetDatacenterId is defined else False}}"
 
     # Since Ansible still doesn't support looping on blocks... you loop on an include file to loop multiple tasks under the same loop structure
-    - name: Get a list of Snapshots for the current server
+    - name: Get a list of Snapshots for the current server (Due to the way Ansible handles includes with loops this could take a few minutes)
       include_tasks: ./files/list_snapshots.yml
       loop: "{{ snapshot_servers }}"
       loop_control:
