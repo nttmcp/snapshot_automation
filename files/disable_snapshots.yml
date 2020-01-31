@@ -5,6 +5,16 @@
     id: "{{item.id}}"
   register: server
 
+- set_fact:
+    replication: True if server.data.server[0].snapshotService.replicationTargetDatacenterId is defined else False
+    service_enabled: True if server.data.server[0].snapshotService.state is defined else False
+    service_state: False
+
+- set_fact:
+    service_state: True if server.data.server[0].snapshotService.state == 'NORMAL' else False
+  when: service_enabled
+
+
 - name: Disable Snapshot Replication
   nttmcp.mcp.snapshot_service:
     region: "{{region}}"
@@ -12,7 +22,7 @@
     server_id: "{{item.id}}"
     replication: "{{rep_mcp}}"
     state: absent
-  when: server.data.server[0].snapshotService.replicationTargetDatacenterId is defined and server.data.server[0].snapshotService.state == 'NORMAL'
+  when: replication and service_state
 
 - name: Disable Snapshots Completely
   nttmcp.mcp.snapshot_service:
@@ -20,4 +30,4 @@
     datacenter: "{{mcp}}"
     server_id: "{{item.id}}"
     state: absent
-  when: server.data.server[0].snapshotService.replicationTargetDatacenterId is not defined and server.data.server[0].snapshotService.state == 'NORMAL'
+  when: not replication and service_state
