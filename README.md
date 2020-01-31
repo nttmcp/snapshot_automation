@@ -9,6 +9,13 @@ This collection of Playbooks can be used to enable the snapshot service on serve
 
 ## Requirements
 
+### Reporting System Requirements
+
+* <250 servers 2GB of RAM 2 vCPUs
+* 250-750 servers 4GB of RAM 2 vCPUs
+* >750 servers 6GB of RAM 2 vCPUs
+* Running 2 simultaneous reports against 2 different MCPs: Double the RAM and vCPU count
+
 ### Python Modules
 
 * jmespath
