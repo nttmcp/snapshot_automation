@@ -52,6 +52,8 @@ https://galaxy.ansible.com/nttmcp/mcp
 
 To use the improved Snapshot reporting module which generates the same reports in on average 1/8 the time, install this additional Collection
 
+https://galaxy.ansible.com/kensinfield/snapshot_report
+
 > ansible-galaxy collection install kensinfield.snapshot_report
 
 
