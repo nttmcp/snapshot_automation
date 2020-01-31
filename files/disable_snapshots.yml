@@ -13,9 +13,6 @@
     replication: "{{rep_mcp}}"
     state: absent
   when: server.data.server[0].snapshotService.replicationTargetDatacenterId is defined and server.data.server[0].snapshotService.state == 'NORMAL'
-  loop: "{{csv_servers.list}}"
-  loop_control:
-    label: "Disabling Snaphot Replication on: {{item.id}}"
 
 - name: Disable Snapshots Completely
   nttmcp.mcp.snapshot_service:
