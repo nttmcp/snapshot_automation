@@ -4,6 +4,7 @@ This collection of Playbooks can be used to enable the snapshot service on serve
 
 ## Information
 **Version:** 1.0.0
+
 **Author:** Ken Sinfield <ken.sinfield@cis.ntt.com>
 
 ## Requirements
