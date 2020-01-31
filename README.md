@@ -9,11 +9,17 @@ This collection of Playbooks can be used to enable the snapshot service on serve
 
 ## Requirements
 
-### Reporting System Requirements
+### Reporting System Requirements (when using the Playbooks)
 
 * <250 servers 2GB of RAM 2 vCPUs
 * 250-750 servers 4GB of RAM 2 vCPUs
 * \>750 servers 6GB of RAM 2 vCPUs
+* Running 2 simultaneous reports against 2 different MCPs: Double the RAM and vCPU count
+
+### Reporting System Requirements (when using the kensinfield.snapshot_reports.report module)
+
+* 250-750 servers 1GB of RAM 2 vCPUs
+* \>750 servers 2GB of RAM 2 vCPUs
 * Running 2 simultaneous reports against 2 different MCPs: Double the RAM and vCPU count
 
 ### Ansible Version
@@ -37,11 +43,16 @@ To install these modules execute:
 
 ## Ansible Collection(s)
 
-Additionally, the NTTMCP-MCP Ansible collection is required.
+Additionally, the NTTMCP-MCP Ansible Collection is required.
 
 https://galaxy.ansible.com/nttmcp/mcp
 
 > ansible-galaxy collection install nttmcp.mcp
+
+
+To use the improved Snapshot reporting module which generates the same reports in on average 1/8 the time, install this additional Collection
+
+> ansible-galaxy collection install kensinfield.snapshot_report
 
 
 ## Authentication
@@ -74,6 +85,8 @@ Use environment variables:
 
 * **snapshot_server_csv.yml** -- Use to enable snapshots for a provided list of servers via a CSV file (use example_server_input.csv as a template)
 
+* **service_disable_csv.yml** -- Disables Replication and the Snapshot service on a list of server IDs
+
 ### snapshot_report.yml
 
 * Update **region** and **mcp** extra-vars to the desired region and MCP ID.
@@ -103,3 +116,13 @@ Use environment variables:
 * Monitor snapshot.log for progress reports
 
 > ansible-playbook snapshot_service_csv.yml -e"region=na csv=my_csv.csv primary_mcp=NA9 secondary_mcp=NA12"
+
+### service_disable_csv.yml
+
+* Update **region**, **mcp** (MCP ID where the servers are hosted), **rep_mcp** (MCP ID of the MCP used for replication), **csv** (path to the CSV file)
+* This Playbook will determine if replication is enabled and disable this first. Disabling replication can take 2-4 hours before the service can be disabled
+* Subsequent runs of the Playbook will attempt to disable the Snapshot service completely.
+* If replication is still in the process of disabling, the Playbook will skip attempting to disable the service and the Playbook can be run again at a later date
+* The included file example_disable.csv shows the format for the CSV
+
+> ansible-playbook service_disable_csv.yml -e"region=na mcp=na9 rep_mcp=na12 csv=DisableSnaps.csv"

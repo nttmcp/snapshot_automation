@@ -14,7 +14,6 @@
     service_state: "{{True if server.data.server[0].snapshotService.state == 'NORMAL' else False}}"
   when: service_enabled
 
-
 - name: Disable Snapshot Replication
   nttmcp.mcp.snapshot_service:
     region: "{{region}}"
