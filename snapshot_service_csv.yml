@@ -1,0 +1,40 @@
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  vars:
+    # Change region, datacenter and cnd to the required values or include them with -e on the CLI
+    region: "{{region}}"
+    batch_size: 15
+    wait_time: 30
+    servers: []
+    csv_file: "{{csv}}"
+    log_file: "snapshot.log"
+    primary_mcp: "{{primary_mcp}}"
+    secondary_mcp: "{{secondary_mcp}}"
+    count: 0
+  tasks:
+    # Load the CSV file with the list of servers
+    - name: Read users from CSV file and return a dictionary
+      read_csv:
+        path: "{{csv_file}}"
+        strict: True
+      register: csv_servers
+
+    # Enable snapshots - or skip if already enabled on the server
+    # This is done as an include tasks because there are multiple tasks that need to come under the one loop and
+    # ansible doesn't allow loops on blocks so only way to do it is with a loop on an include task
+    # All the local vars are setup to handle the dodgy format we recieve in the Excel file with the server list
+    - name: Activate the Snapshot Service on the servers
+      include_tasks: ./files/enable_snapshots_csv.yml
+      when: item.Datacenter == primary_mcp
+      loop: "{{csv_servers.list}}"
+      loop_control:
+        extended: True
+        label: "{{item['Server Name']}}"
+      vars:
+        name: "{{item['Server Name']}}"
+        uuid: "{{item.ID}}"
+        plan: "{{(item['Snapshot Plan'] | regex_replace('^(.*)?:.*', '\\1')) | replace(' ', '_') | upper}}"
+        window: "{{item['Snapshot Slot'] | regex_replace('^(\\d+)?:.*', '\\1') | int}}"
+        replication_dc: "{{secondary_mcp if item.Datacenter == primary_mcp else primary_mcp}}"
+        replication: "{{item['Snapshot Replication']}}"

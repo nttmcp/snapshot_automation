@@ -1,0 +1,67 @@
+---
+# Cool logging message
+- name: Logger
+  shell: echo `date +"%m/%d/%Y - %T"` - {{log_string}} >> {{log_file|quote}}
+  vars:
+    log_string: "INFO: Listing snapshots in {{mcp}} for server {{item.name}} {{item.id}}"
+
+# Reach out to CC and get the list of Snapshots for the current server in the loop
+- name: Get Snapshots
+  nttmcp.mcp.snapshot_info:
+    region: "{{region}}"
+    datacenter: "{{datacenter}}"
+    server_id: "{{item.id}}"
+    type: snapshot
+  register: snapshots
+  ignore_errors: True
+
+# Cool logging message
+- name: Logger
+  shell: echo `date +"%m/%d/%Y - %T"` - {{log_string2|quote if snapshots.failed|default(False) else log_string}} >> {{log_file|quote}}
+  vars:
+    log_string: "INFO: Snapshots found in {{mcp}} for server {{item.name}}"
+    log_string2: "WARNING: No snapshots found in {{mcp}} for server {{item.name}}"
+
+# Generates an array of servers that had issues when listing the snapshots via the API
+# this could be because of some backend issue with the server, an API issue or because of network connectivity
+# This array/list is reported in a separate report file 'reports/<mcp>_failed_servers.csv'
+- name: Generating list of servers that failed to return snapshots
+  set_fact:
+    failed_servers: "{{failed_servers + [{'name': item.name, 'id': item.id}]}}"
+  when: snapshots.failed|default(False)
+
+# Generates an array of failed snapshots. There could be multiple failed snapshots for the same server, they get a
+# unique entry in this array.
+- name: Generating the list of failed snapshots
+  set_fact:
+    report: "{{report + [{'server': item.name, 'server_id': item.id, 'snapshot': item2.id, 'consistency': consistency, 'state': state, 'index': index_state, 'start': start_time, 'replica': replica, 'family': family}]}}"
+  when: state != 'NORMAL' and not snapshots.failed|default(False)
+  loop: "{{snapshots.data.snapshot_info}}"
+  loop_control:
+    label: "{{item.name}} - Snapshot: {{item2.id}}"
+    loop_var: item2
+  vars:
+    consistency: "{{item2.consistencyLevel|default('N/A')}}"
+    state: "{{item2.state|default('N/A')}}"
+    index_state: "{{item2.indexState|default('N/A')}}"
+    start_time: "{{item2.startTime|default('N/A')}}"
+    replica: "{{item2.replica|default(False)}}"
+    family: "{{item.family}}"
+
+# Generating some cool stats
+- name: Getting total Snapshot count
+  set_fact:
+    snapshot_count: "{{snapshot_count | int + snapshots.data.snapshot_info|count | int}}"
+  when: not snapshots.failed|default(False)
+
+# Generating the majority of the cool stats
+# Generates the array of server stats, one entry per server and is reported in 'reports/<mcp>_server_report.csv'
+- name: Generating the list used for the server report
+  set_fact:
+    server_report: "{{server_report + [{'name': item.name, 'id': item.id, 'replication': item.replication, 'count': snapshots.data.snapshot_info|count, 'failed': report | json_query(query1)| count, 'local': snapshots.data.snapshot_info | json_query(query2) | count, 'remote': snapshots.data.snapshot_info | json_query(query3) | count}]}}"
+    snapshot_replica_count: "{{snapshot_replica_count | int + snapshots.data.snapshot_info | json_query(query3) | count}}"
+  when: not snapshots.failed|default(False)
+  vars:
+    query1: "[?server_id=='{{item.id}}']"
+    query2: "[? !replica && type=='SYSTEM']"
+    query3: "[? replica && type=='SYSTEM']"

@@ -1,0 +1,69 @@
+<html>
+  <head>
+    <style>
+      .center {
+        margin: auto;
+        width: 50%;
+        padding: 10px;
+        font-family: arial;
+      }
+      div.unstyledTable {
+        font-family: arial;
+      }
+      .divTable.unstyledTable .divTableCell, .divTable.unstyledTable .divTableHead {
+        border-bottom: 1px solid lightgrey;
+        padding-top: 5px;
+        font: arial;
+      }
+
+      .divTable.unstyledTable .divTableHeading {
+        }
+      .divTable.unstyledTable .divTableHeading .divTableHead {
+        font-size: 18px;
+        font-weight: bold;
+        color: black;
+        border-bottom: 3px solid lightgrey;
+      }
+      /* DivTable.com */
+      .divTable{ display: table; }
+      .divTableRow { display: table-row; }
+      .divTableHeading { display: table-header-group;}
+      .divTableCell, .divTableHead { display: table-cell;}
+      .divTableHeading { display: table-header-group;}
+      .divTableFoot { display: table-footer-group;}
+      .divTableBody { display: table-row-group;}
+    </style>
+  </head>
+  <body>
+    <div class="center" style="text-align: center;"><h1>MCP Snapshot Window Utilization Report</h1></div>
+    {% for mcp in report%}
+      <div class="center" style="text-align: left;"><h2>{{mcp.mcp}}</h2></div>
+      <div class="divTable unstyledTable center" style="width:50%;">
+        <div class="divTableHeading">
+          <div class="divTableRow">
+            <div class="divTableHead"><center>Start Hour</center></div>
+            <div class="divTableHead"><center>Status</center></div>
+            <div class="divTableHead"><center>Available Slots</center></div>
+          </div>
+        </div>
+
+        <div class="divTableBody">
+            {% for window in mcp.windows|sort(attribute='start_hour') %}
+              <div class="divTableRow">
+                <div class="divTableCell"><center>{{window.start_hour}}</center></div>
+                <div class="divTableCell"><center>{{window.status}}</center></div>
+                {% if window.slots > 30 %}
+                  <div class="divTableCell" style="background-color: #3dec23;"><center>{{window.slots}}</center></div>
+                {% elif window.slots > 10 %}
+                  <div class="divTableCell" style="background-color: yellow;"><center>{{window.slots}}</center></div>
+                {% else %}
+                  <div class="divTableCell" style="background-color: red;"><center>{{window.slots}}</center></div>
+                {% endif %}
+              </div>
+            {% endfor %}
+        </div>
+      </div>
+      <br>
+    {% endfor %}
+  </body>
+</html>

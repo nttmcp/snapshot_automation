@@ -1,0 +1,31 @@
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  vars:
+    window_report: []
+    report: []
+    default_plan: "ONE_MONTH"
+    mcps:
+      - region: na
+        mcp: NA9
+      - region: na
+        mcp: NA12
+      - region: au
+        mcp: AU9
+      - region: au
+        mcp: AU10
+      - region: eu
+        mcp: EU7
+      - region: eu
+        mcp: EU6
+  tasks:
+    - name: Get the Snapshot Window for the current MCP
+      include_tasks: ./files/get_snapshot_window_status.yml
+      loop: "{{ mcps }}"
+      loop_control:
+        label: "{{item.mcp}}"
+
+    - name: Generate HTML Report
+      template:
+        src: ./templates/report_html.j2
+        dest: "./reports/window_status.html"

@@ -1,0 +1,123 @@
+<html>
+  <head>
+    <style>
+      .center {
+        margin: auto;
+        width: 90%;
+        padding: 10px;
+        font-family: arial;
+      }
+      div.unstyledTable {
+        font-family: arial;
+      }
+      .divTable.unstyledTable .divTableCell, .divTable.unstyledTable .divTableHead {
+        border-bottom: 1px solid lightgrey;
+        padding-top: 5px;
+        font: arial;
+      }
+
+      .divTable.unstyledTable .divTableHeading {
+        }
+      .divTable.unstyledTable .divTableHeading .divTableHead {
+        font-size: 18px;
+        font-weight: bold;
+        color: black;
+        border-bottom: 3px solid lightgrey;
+      }
+      /* DivTable.com */
+      .divTable{ display: table; }
+      .divTableRow { display: table-row; }
+      .divTableHeading { display: table-header-group;}
+      .divTableCell, .divTableHead { display: table-cell;}
+      .divTableHeading { display: table-header-group;}
+      .divTableFoot { display: table-footer-group;}
+      .divTableBody { display: table-row-group;}
+    </style>
+  </head>
+  <body>
+    <div class="center" style="text-align: center;"><h1>Snapshot Report</h1></div>
+      <div class="center" style="text-align: left; width:60%;"><h2>Server Family Summary</h2></div>
+      <div class="divTable unstyledTable center" style="width:60%;">
+        <div class="divTableHeading">
+          <div class="divTableRow">
+            <div class="divTableHead"><center>Family</center></div>
+            <div class="divTableHead"><center>Count</center></div>
+          </div>
+        </div>
+        <div class="divTableBody">
+          <div class="divTableRow">
+            <div class="divTableCell"><center>Windows</center></div>
+            <div class="divTableCell"><center>{{windows_servers | count}}</center></div>
+          </div>
+          <div class="divTableRow">
+            <div class="divTableCell"><center>Linux</center></div>
+            <div class="divTableCell"><center>{{linux_servers | count}}</center></div>
+          </div>
+        </div>
+      </div>
+    <div class="center" style="text-align: center;"><h1>Snapshot Report</h1></div>
+      <div class="center" style="text-align: left; width:60%;"><h2>Server Snapshot Summary</h2></div>
+      <div class="divTable unstyledTable center" style="width:60%;">
+        <div class="divTableHeading">
+          <div class="divTableRow">
+            <div class="divTableHead"><center>Server</center></div>
+            <div class="divTableHead"><center>Total Snapshots</center></div>
+            <div class="divTableHead"><center>Failed Snapshots</center></div>
+          </div>
+        </div>
+        <div class="divTableBody">
+          {% for entry in server_report%}
+          <div class="divTableRow">
+            <div class="divTableCell"><center>{{entry.name}} ({{entry.id}})</center></div>
+            <div class="divTableCell"><center>{{entry.count}}</center></div>
+            {% if entry.failed > 0 %}
+              <div class="divTableCell" style="background-color: red;"><center>{{entry.failed}}</center></div>
+            {% else %}
+              <div class="divTableCell" style="background-color: #3dec23;"><center>{{entry.failed}}</center></div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <br><br><br>
+      <div class="center" style="text-align: left;width:90%;"><h2>Failed Snapshots</h2></div>
+      <div class="divTable unstyledTable center" style="width:90%;">
+        <div class="divTableHeading">
+          <div class="divTableRow">
+            <div class="divTableHead"><center>Server</center></div>
+            <div class="divTableHead"><center>Snapshot ID</center></div>
+            <div class="divTableHead"><center>Replica</center></div>
+            <div class="divTableHead"><center>Snapshot Creation</center></div>
+            <div class="divTableHead"><center>State</center></div>
+            <div class="divTableHead"><center>Consistency Level</center></div>
+            <div class="divTableHead"><center>Index State</center></div>
+          </div>
+        </div>
+        <div class="divTableBody">
+          {% for entry in report%}
+          <div class="divTableRow">
+            <div class="divTableCell"><center>{{entry.server}} ({{entry.server_id}})</center></div>
+            <div class="divTableCell"><center>{{entry.snapshot}}</center></div>
+            <div class="divTableCell"><center>{{entry.replica}}</center></div>
+            <div class="divTableCell"><center>{{entry.start}}</center></div>
+            {% if entry.state != 'NORMAL' %}
+              <div class="divTableCell" style="background-color: red;"><center>{{entry.state}}</center></div>
+            {% else %}
+              <div class="divTableCell" style="background-color: #3dec23;"><center>{{entry.state}}</center></div>
+            {% endif %}
+            {% if entry.consistency != 'NORMAL' %}
+              <div class="divTableCell" style="background-color: red;"><center>{{entry.consistency}}</center></div>
+            {% else %}
+              <div class="divTableCell" style="background-color: #3dec23;"><center>{{entry.consistency}}</center></div>
+            {% endif %}
+            {% if entry.index != 'INDEX_VALID' %}
+              <div class="divTableCell" style="background-color: red;"><center>{{entry.index}}</center></div>
+            {% else %}
+              <div class="divTableCell" style="background-color: #3dec23;"><center>{{entry.index}}</center></div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+  </body>
+</html>

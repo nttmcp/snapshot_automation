@@ -1,0 +1,34 @@
+{
+  "plans": [
+    {
+      "id": "ONE_MONTH",
+      "tag": "ONE_MONTH",
+      "replication": false
+    },
+    {
+      "id": "ONE_MONTH",
+      "tag": "ONE_MONTH_REP",
+      "replication": true
+    },
+    {
+      "id": "THREE_MONTH",
+      "tag": "THREE_MONTH",
+      "replication": false
+    },
+    {
+      "id": "THREE_MONTH",
+      "tag": "THREE_MONTH_REP",
+      "replication": true
+    },
+    {
+      "id": "TWELVE_MONTH",
+      "tag": "TWELVE_MONTH",
+      "replication": false
+    },
+    {
+      "id": "TWELVE_MONTH",
+      "tag": "TWELVE_MONTH_REP",
+      "replication": true
+    }
+  ]
+}

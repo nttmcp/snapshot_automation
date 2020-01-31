@@ -1,0 +1,4 @@
+ID,Server Name,Snapshot Slot,Snapshot Plan,Snapshot Replication,Datacenter
+c4f58ed0-6774-4972-8acc-98a9d16a1fae,server02,00:00-02:00,One Month: 7d-4w,No,NA9
+a77f9329-987f-4267-9043-b2ea9771a6f1,server03,00:00-02:00,One Month: 7d-4w,Yes,NA9
+c445025f-c4c1-4d05-badb-18ecdff09105,server04,14:00-16:00,One Month: 7d-4w,No,NA9

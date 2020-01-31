@@ -1,0 +1,53 @@
+---
+# Log some cool stuff to snapshot.log
+- name: Logger
+  shell: echo `date +"%m/%d/%Y - %T"` - {{log_string}} >> {{log_file|quote}}
+  vars:
+    log_string: "INFO: {'Server': '{{uuid}}', 'Plan': '{{plan}}', 'Allocated_Window': '{{window}}', 'Replication': '{{replication}}'}"
+  ignore_errors: True
+
+# Enable the snapshot service and kickoff a manual snapshot
+- name: Enabling the Snapshot Service and taking an initiate Snapshot
+  nttmcp.mcp.snapshot_service:
+    region: "{{region}}"
+    datacenter: "{{primary_mcp}}"
+    server_id: "{{uuid}}"
+    plan: "{{plan}}"
+    window: "{{window}}"
+    replication: "{{secondary_mcp if replication == 'Yes' else omit}}"
+    take_snapshot: True
+  register: snapshot_service_output
+  ignore_errors: True
+
+# Log some cool stuff to snapshot.log
+- name: Logger
+  shell: echo `date +"%m/%d/%Y - %T"` - {{log_string2|quote if snapshot_service_output.failed|default(False) else log_string}} >> {{log_file|quote}}
+  vars:
+    log_string: "INFO: RESULT: Enabling Snapshot service for server {{uuid}}: {{snapshot_service_output}}"
+    log_string2: "ERROR: RESULT: Enabling Snapshot service failed for server {{uuid}}: {{snapshot_service_output}}"
+  ignore_errors: True
+
+- set_fact:
+    count: "{{count | int + 1}}"
+  when: snapshot_service_output.changed|default(False)
+
+- debug:
+    msg: "Waiting for {{wait_time}} minutes"
+  when: count | int == batch_size | int
+
+# Log some cool stuff to snapshot.log
+- name: Logger (wait)
+  shell: echo `date +"%m/%d/%Y - %T"` - {{log_string}} >> {{log_file|quote}}
+  when: count | int == batch_size | int
+  vars:
+    log_string: "INFO: Waiting for {{wait_time}} minutes"
+  ignore_errors: True
+
+- name: Pausing to control the load on MCP infrastructure
+  pause:
+    minutes: "{{wait_time}}"
+  when: count | int == batch_size | int
+
+- set_fact:
+    count: 0
+  when: count | int == batch_size | int

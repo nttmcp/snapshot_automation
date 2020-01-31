@@ -1,0 +1,18 @@
+---
+- name: Getting a list of Snapshot Windows
+  nttmcp.mcp.snapshot_info:
+    region: "{{item.region}}"
+    datacenter: "{{item.mcp}}"
+    plan: "{{default_plan}}"
+  register: windows_output
+
+- set_fact:
+    window_report: "{{window_report + [{'start_hour': window.startHour, 'slots': window.availableSlotCount, 'status': window.availabilityStatus}]}}"
+  loop: "{{windows_output.data.window}}"
+  loop_control:
+    loop_var: window
+    label: "{{window.id}}"
+
+- set_fact:
+    report: "{{report + [{'mcp': item.mcp, 'windows': window_report}]}}"
+    window_report: []

@@ -1,0 +1,26 @@
+---
+# Log some cool stuff to snapshot.log
+- name: Logger
+  shell: echo `date +"%m/%d/%Y - %T"` - {{log_string}} >> {{log_file|quote}}
+  vars:
+    log_string: "INFO: {'Server': '{{item.name}}', 'Plan': '{{item.plan}}', 'Allocated_Window': '{{item.window}}', 'replication': '{{item.replication}}'}"
+
+# Enable the snapshot service
+- name: Enabling the Snapshot Service
+  nttmcp.mcp.snapshot_service:
+    region: "{{region}}"
+    datacenter: "{{datacenter}}"
+    network_domain: "{{cnd}}"
+    server_id: "{{item.id}}"
+    plan: "{{item.plan}}"
+    window: "{{item.window}}"
+    replication: "{{rep_datacenter if item.replication else omit}}"
+  register: snapshot_service_output
+  ignore_errors: True
+
+# Log some cool stuff to snapshot.log
+- name: Logger
+  shell: echo `date +"%m/%d/%Y - %T"` - {{log_string2|quote if snapshot_service_output.failed|default(False) else log_string}} >> {{log_file|quote}}
+  vars:
+    log_string: "INFO: Enabling Snapshot service for server {{item.name}}: {{snapshot_service_output}}"
+    log_string2: "ERROR: Enabling Snapshot service for server {{item.name}}: {{snapshot_service_output}}"

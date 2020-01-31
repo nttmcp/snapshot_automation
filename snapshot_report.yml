@@ -1,0 +1,71 @@
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  vars:
+    datacenter: "{{mcp}}"
+    snapshot_servers: []
+    server_snapshots: []
+    report: []
+    count_report: []
+    server_report: []
+    failed_servers: []
+    log_file: "snapshot_report.log"
+    snapshot_replica_count: 0
+    snapshot_count: 0
+    region: na
+  tasks:
+    # Gets a list of servers from CC. If a Network Domain is specified with cnd then it will limit the search
+    # otherwise without a value for cnd it will return all servers for the Org in the specified MCP
+    - name: List servers
+      nttmcp.mcp.server_info:
+        region: "{{region}}"
+        datacenter: "{{datacenter}}"
+        network_domain: "{{cnd if cnd is defined else omit}}"
+      register: servers
+
+    # Creates a new array of those servers that actually have snapshots enabled - should be a smaller array than the previous one
+    - set_fact:
+        snapshot_servers: "{{snapshot_servers + [{'id': item.id, 'name': item.name, 'replication': replication, 'plan': item.snapshotService.servicePlan, 'state': item.snapshotService.state, 'family': item.guest.operatingSystem.family}]}}"
+      when: item.snapshotService is defined
+      loop: "{{servers.data.server}}"
+      loop_control:
+        label: "{{item.name}}"
+      vars:
+        replication: "{{True if item.snapshotService.replicationTargetDatacenterId is defined else False}}"
+
+    # Since Ansible still doesn't support looping on blocks... you loop on an include file to loop multiple tasks under the same loop structure
+    - name: Get a list of Snapshots for the current server
+      include_tasks: ./files/list_snapshots.yml
+      loop: "{{ snapshot_servers }}"
+      loop_control:
+        label: "{{item.name}}"
+        extended: True
+
+    # Generating all the CSV report files
+    # This report is a basic overview of the Snapshots statistics for the MCP
+    - name: Generate Snapshot Summary Report
+      template:
+        force: True
+        src: ./summary_report_csv.j2
+        dest: "./reports/{{datacenter}}_summary.csv"
+
+    # Individual server report with Snapshot stats per server
+    - name: Generate Snapshot Server Report
+      template:
+        force: True
+        src: ./server_report_csv.j2
+        dest: "./reports/{{datacenter}}_server.csv"
+
+    # The "oh ****" report
+    - name: Generate Failed Snapshot Report
+      template:
+        force: True
+        src: ./failed_report_csv.j2
+        dest: "./reports/{{datacenter}}_failed.csv"
+
+    # The double "oh ****" report
+    - name: Generate Failed Servers Report
+      template:
+        force: True
+        src: ./failed_server_report_csv.j2
+        dest: "./reports/{{datacenter}}_failed_servers.csv"

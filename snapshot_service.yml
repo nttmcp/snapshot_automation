@@ -1,0 +1,91 @@
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  vars:
+    # Change region, datacenter and cnd to the required values or include them with -e on the CLI
+    region: "{{region}}"
+    datacenter: "{{mcp}}"
+    rep_datacenter: "{{rep_mcp}}"
+    cnd: "{{cnd}}"
+    report: []
+    plans: []
+    snapshot_servers: []
+    valid_snapshot_servers: []
+    default_plan: "ONE_MONTH"
+    # This config file maps the server tag values to actual Cloud Control Snapshot plans with or without replication
+    snapshot_config: "{{ lookup('file','./files/snapshot_config.json') | from_json }}"
+    log_file: "snapshot.log"
+  tasks:
+    # The task gets a list of plans from Cloud Control
+    # probably could just hard code this but figured I'd make this semi dynamic in case new plans are added later
+    # This list is then compared to the tags against servers to ensure the servers are tagged with valid plans
+    - name: Getting a list of Snapshot Plans
+      nttmcp.mcp.snapshot_info:
+        region: "{{region}}"
+        datacenter: "{{datacenter}}"
+        type: plan
+      register: plan_output
+
+    # This just creates a list of plans from the json output from the above task
+    # run ansible-doc nttmcp.mcp.snapshot_info to see how the data is returned from the previous task
+    - set_fact:
+        plans: "{{plans + [item.id]}}"
+      loop: "{{plan_output.data.snapshot_plan_info}}"
+      loop_control:
+        label: "Plan: {{item.id}}"
+
+    # Gets a list of servers for a given Network Domain
+    # If there are multiple Network Domains which there probably always will be we might need to first list them
+    # and then loop through them - hmm might need to think about this one
+    - name: List servers
+      nttmcp.mcp.server_info:
+        region: "{{region}}"
+        datacenter: "{{datacenter}}"
+        network_domain: "{{cnd}}"
+      register: servers
+
+    # This just creates a list of servers that have the snapshot tags
+    # Note if a client changes the snapshot tag names from 'snapshot' and 'window' they need to be updated here for
+    # query1 and query2 vars below
+    - set_fact:
+        snapshot_servers: "{{snapshot_servers + [{'id': item.id, 'name': item.name, 'plan': (item | json_query(query1))[0], 'window': (item | json_query(query2))[0]}]}}"
+      when: (item | json_query(query1))[0] is defined and (item | json_query(query2))[0] is defined
+      loop: "{{servers.data.server}}"
+      loop_control:
+        label: "{{item.name}}"
+      vars:
+        query1: "tag[?tagKeyName=='snapshot'].value"
+        query2: "tag[?tagKeyName=='window'].value"
+
+    # Log some cool stuff to snapshot.log
+    - name: Logger
+      shell: echo `date +"%m/%d/%Y - %T"` -  {{log_string|quote}} >> {{log_file|quote}}
+      when: (item | json_query(query1))[0] is not defined or (item | json_query(query2))[0] is not defined
+      loop: "{{servers.data.server}}"
+      loop_control:
+        label: "{{item.name}}"
+      vars:
+        log_string: "WARNING: Missing tags for server {{item.name}} ({{item.id}})"
+        query1: "tag[?tagKeyName=='snapshot'].value"
+        query2: "tag[?tagKeyName=='window'].value"
+
+    # Creates a final list of servers with valid snapshot tags
+    # this is the list used to enable the snapshot service on the servers
+    - set_fact:
+        valid_snapshot_servers: "{{valid_snapshot_servers + [{'id': item.id, 'name': item.name, 'plan': (snapshot_config | json_query(query1))[0], 'replication': (snapshot_config | json_query(query2))[0], 'window': item.window}]}}"
+      when: (snapshot_config | json_query(query1))[0] is defined
+      loop: "{{snapshot_servers}}"
+      loop_control:
+        label: "{{item.name}}"
+      vars:
+        query1: "plans[?tag=='{{item.plan}}'].id"
+        query2: "plans[?tag=='{{item.plan}}'].replication"
+
+    # Enable snapshots - or skip if already enabled on the server
+    # This is done as an include tasks because there are multiple tasks that need to come under the one loop and
+    # ansible doesn't allow loops on blocks so only way to do it is with a loop on an include task
+    - name: Activate the Snapshot Service on the servers
+      include_tasks: ./files/enable_snapshots.yml
+      loop: "{{ valid_snapshot_servers }}"
+      loop_control:
+        label: "{{item.name}}"
