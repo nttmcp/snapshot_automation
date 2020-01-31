@@ -7,7 +7,7 @@
 
 - set_fact:
     replication: True if server.data.server[0].snapshotService.replicationTargetDatacenterId is defined else False
-    service_enabled: True if server.data.server[0].snapshotService.state is defined else False
+    service_enabled: True if server.data.server[0].snapshotService is defined else False
     service_state: False
 
 - set_fact:
