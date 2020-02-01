@@ -128,3 +128,27 @@ Use environment variables:
 * The included file example_disable.csv shows the format for the CSV
 
 > ansible-playbook service_disable_csv.yml -e"region=na mcp=na9 rep_mcp=na12 csv=DisableSnaps.csv"
+
+## Dockerfile usage
+
+* clone repository
+* enter cloned repo
+```
+cd snapshot_automation
+```
+* build using dockerfile
+``` sh
+docker build -t snapshot_automation:latest .
+```
+* create env file called .credentials containing the following:
+NTTMCP_API=api-<geo>.mcp-services.net
+NTTMCP_API_VERSION=2.10
+NTTMCP_PASSWORD=mypassword
+NTTMCP_USER=myusername
+
+* run docker container with playbook and command
+for region eu and mcp EU11 an example:
+```
+docker run -it -v $PWD/reports:/ansible/snapshot_automation/reports --env-file .credentials snapshot_automation ansible-playbook snapshot_report_module.yml -e"region=eu mcp=EU11"
+```
+reports will be in report folder
