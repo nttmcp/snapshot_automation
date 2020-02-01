@@ -130,6 +130,7 @@ Use environment variables:
 > ansible-playbook service_disable_csv.yml -e"region=na mcp=na9 rep_mcp=na12 csv=DisableSnaps.csv"
 
 ## Dockerfile usage
+The Dockerfile will create a container that is ansible enabled with necessary collections installed.  It can be used in any environment avoiding ansible version conflicts. It can even be used in windows where ansible normally cannot be used.
 
 * clone repository
 * enter cloned repo
