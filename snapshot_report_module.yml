@@ -1,0 +1,23 @@
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  vars:
+    datacenter: "{{mcp}}"
+    snapshot_servers: []
+    server_snapshots: []
+    failed_report: []
+    count_report: []
+    server_report: []
+    failed_servers: []
+    log_file: "snapshot_report.log"
+    snapshot_replica_count: 0
+    snapshot_count: 0
+    region: na
+  tasks:
+    # Gets a list of servers from CC. If a Network Domain is specified with cnd then it will limit the search
+    # otherwise without a value for cnd it will return all servers for the Org in the specified MCP
+    - name: loop and generate reports from region -> {{region}} datacenter -> {{datacenter}}
+      kensinfield.snapshot_report.report:
+        region: "{{region}}"
+        datacenter: "{{datacenter}}"
+        network_domain: "{{cnd if cnd is defined else omit}}"
